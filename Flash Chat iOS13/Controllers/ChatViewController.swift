@@ -31,8 +31,12 @@ class ChatViewController: UIViewController {
     
     func loadMessages()
     {
-        messages = []
-        db.collection(Constants.FStore.collectionName).getDocuments { (querySnapshot, error) in
+        db.collection(Constants.FStore.collectionName)
+            .order(by: Constants.FStore.dateField)
+            .addSnapshotListener { (querySnapshot, error) in
+            
+            self.messages = []
+            
             if let e = error
             {
                 print("There was an issue retrieving data from the Firestore: \(e)")
@@ -48,7 +52,8 @@ class ChatViewController: UIViewController {
                         {
                             let newMessage = Message(sender: messageSender, body: messageBody)
                             self.messages.append(newMessage)
-                            //because reloading is chaning the user interface we use dipatch queue
+                            
+                            //because reloading is changing the user interface we use dipatch queue
                             DispatchQueue.main.async {
                                 self.tableView.reloadData()
                             }
@@ -64,7 +69,8 @@ class ChatViewController: UIViewController {
         {
             db.collection(Constants.FStore.collectionName).addDocument(data: [
                 Constants.FStore.senderField: messageSender,
-                Constants.FStore.bodyField: messageBody
+                Constants.FStore.bodyField: messageBody,
+                Constants.FStore.dateField: Date().timeIntervalSince1970
             ]) { (error) in
                 if let e = error
                 {
