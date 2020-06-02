@@ -56,6 +56,10 @@ class ChatViewController: UIViewController {
                             //because reloading is changing the user interface we use dipatch queue
                             DispatchQueue.main.async {
                                 self.tableView.reloadData()
+                                //for scrolling to the end of messages when the view loads up
+                                //we want the last row and we have only one section
+                                let indexPath = IndexPath(row: self.messages.count - 1, section: 0)
+                                self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)
                             }
                         }
                     }
@@ -79,6 +83,9 @@ class ChatViewController: UIViewController {
                 else
                 {
                     print("successfully saved data")
+                    DispatchQueue.main.async {
+                        self.messageTextfield.text = ""
+                    }
                 }
             }
         }
@@ -103,9 +110,30 @@ extension ChatViewController: UITableViewDataSource
         return messages.count
     }
     
+    //this method gets called as many times as there are cells (as many messages)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let message = messages[indexPath.row]
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: Constants.cellIdentifier, for: indexPath) as! MessageCell
         cell.label.text = messages[indexPath.row].body
+        
+        //this is a message from the current user
+        if message.sender == Auth.auth().currentUser?.email
+        {
+            cell.leftImageView.isHidden = true
+            cell.rightImageView.isHidden = false
+            cell.messageBubble.backgroundColor = UIColor(named: Constants.BrandColors.lightPurple)
+            cell.label.textColor = UIColor(named: Constants.BrandColors.purple)
+        }
+        //this is a message from the other user
+        else
+        {
+            cell.leftImageView.isHidden = false
+            cell.rightImageView.isHidden = true
+            cell.messageBubble.backgroundColor = UIColor(named: Constants.BrandColors.purple)
+            cell.label.textColor = UIColor(named: Constants.BrandColors.lightPurple)
+        }
+        
         return cell
     }
 }
